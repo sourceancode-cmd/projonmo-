@@ -1,12 +1,14 @@
 "use client";
 import PageShell, { Status } from "@/components/PageShell";
 import { useDoc } from "@/lib/content";
+import { useLang } from "@/lib/LanguageContext";
 
 export default function MessagePage() {
   const { data: s, loading, error } = useDoc("settings", "site");
+  const { lang } = useLang();
 
   return (
-    <PageShell title="সভাপতির বাণী">
+    <PageShell title={lang === "bn" ? "সভাপতির বাণী" : "Message from President"}>
       <Status loading={loading} error={error} empty={!s?.leaderMessage} />
       {s?.leaderMessage && (
         <div className="grid gap-8 md:grid-cols-[240px_1fr]">
