@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  body {
+    background: #fff;
+    color: #1f2937;
+  }
+}
