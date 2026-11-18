@@ -4,8 +4,17 @@
   *, ::after, ::before, ::backdrop, ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
+  
   body {
     background: #fff;
     color: #1f2937;
+    font-family: var(--font-hind-siliguri), sans-serif;
+    letter-spacing: 0.02em; /* লেখার অক্ষরগুলোর মাঝে সামান্য ফাঁক */
+    word-spacing: 0.05em;   /* শব্দগুলোর মাঝে সামান্য ফাঁক */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.3;
+    font-weight: 700;
   }
 }
