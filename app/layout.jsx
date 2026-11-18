@@ -6,7 +6,7 @@ import { SITE } from "@/lib/site";
 
 const font = Hind_Siliguri({
   subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"], // ওয়েট বাড়ানো হয়েছে
   display: "swap",
 });
 
@@ -18,7 +18,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="bn">
-      <body className={font.className}>
+      <body className={`${font.className} text-lg md:text-xl leading-relaxed antialiased`}>
         <Header />
         {children}
         <Footer />
