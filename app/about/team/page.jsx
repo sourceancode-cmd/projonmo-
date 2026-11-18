@@ -1,17 +1,19 @@
 "use client";
 import PageShell, { Status } from "@/components/PageShell";
 import { useList } from "@/lib/content";
-
-const GROUPS = [
-  { type: "committee", title: "কার্যনির্বাহী পরিষদ" },
-  { type: "advisor", title: "উপদেষ্টা পরিষদ" },
-];
+import { useLang } from "@/lib/LanguageContext";
 
 export default function TeamPage() {
   const { items, loading, error } = useList("team");
+  const { lang } = useLang();
+
+  const GROUPS = [
+    { type: "committee", title: lang === "bn" ? "কার্যনির্বাহী পরিষদ" : "Executive Committee" },
+    { type: "advisor", title: lang === "bn" ? "উপদেষ্টা পরিষদ" : "Advisory Board" },
+  ];
 
   return (
-    <PageShell title="আমাদের পরিবার" subtitle="কার্যনির্বাহী ও উপদেষ্টা পরিষদ">
+    <PageShell title={lang === "bn" ? "আমাদের পরিবার" : "Our Family"} subtitle={lang === "bn" ? "কার্যনির্বাহী ও উপদেষ্টা পরিষদ" : "Executive and Advisory Boards"}>
       <Status loading={loading} error={error} empty={!items.length} />
       {GROUPS.map((g) => {
         const people = items.filter((m) => m.type === g.type);
@@ -23,12 +25,7 @@ export default function TeamPage() {
               {people.map((m) => (
                 <div key={m.id} className="text-center">
                   {m.photo ? (
-                    <img
-                      src={m.photo}
-                      alt={m.name}
-                      loading="lazy"
-                      className="mx-auto h-32 w-32 rounded-full object-cover"
-                    />
+                    <img src={m.photo} alt={m.name} loading="lazy" className="mx-auto h-32 w-32 rounded-full object-cover" />
                   ) : (
                     <div className="mx-auto h-32 w-32 rounded-full bg-gray-200" />
                   )}
