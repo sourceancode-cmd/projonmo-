@@ -8,7 +8,7 @@ export default function MessagePage() {
   const { lang } = useLang();
 
   return (
-    <PageShell title={lang === "bn" ? "সভাপতির বাণী" : "Message from President"}>
+    <PageShell title={lang === "bn" ? "নির্বাহী পরিচালকের বাণী" : "Message from Executive Director"}>
       <Status loading={loading} error={error} empty={!s?.leaderMessage} />
       {s?.leaderMessage && (
         <div className="grid gap-8 md:grid-cols-[240px_1fr]">
