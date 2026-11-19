@@ -5,7 +5,7 @@ import { getAuthInstance } from "@/lib/auth";
 import { onAuthStateChanged } from "firebase/auth";
 import { logout } from "@/lib/auth";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, doc, setDoc, getDocs, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc, getDocs, deleteDoc, getDoc } from "firebase/firestore";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -21,7 +21,15 @@ export default function AdminDashboard() {
   const [uploading, setUploading] = useState(false);
 
   const fetchData = async (tab) => {
-    if (tab === "settings") return;
+    if (tab === "settings") {
+      // সেটিংসের ডেটা লোড করা
+      const docSnap = await getDoc(doc(db, "settings", "site"));
+      if (docSnap.exists()) {
+        setFormData(docSnap.data());
+      }
+      setItems([]);
+      return;
+    }
     const snap = await getDocs(collection(db, tab));
     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     setItems(data);
@@ -62,7 +70,6 @@ export default function AdminDashboard() {
     let finalData = { ...formData };
 
     try {
-      // ১. Cloudinary-তে ছবি আপলোড (আপনার তথ্য এখানে বসানো হয়েছে)
       if (file) {
         setUploading(true);
         const formDataCloudinary = new FormData();
@@ -150,7 +157,7 @@ export default function AdminDashboard() {
 
         <div className="grid gap-8 md:grid-cols-2">
           <form onSubmit={handleSave} className="space-y-4 rounded-xl bg-white p-6 shadow h-fit">
-            <h2 className="text-lg font-semibold mb-4">{editId ? "এডিট করুন" : `নতুন ${activeTab} যোগ করুন`}</h2>
+            <h2 className="text-lg font-semibold mb-4">{activeTab === "settings" ? "সেটিংস আপডেট করুন" : (editId ? "এডিট করুন" : `নতুন ${activeTab} যোগ করুন`)}</h2>
             
             {activeTab !== "settings" && (
               <label className="block">
@@ -163,7 +170,7 @@ export default function AdminDashboard() {
 
             {activeTab === "settings" && (
               <label className="block">
-                <span className="text-sm font-medium">সভাপতির ছবি আপলোড করুন (ঐচ্ছিক)</span>
+                <span className="text-sm font-medium">নির্বাহী পরিচালকের ছবি আপলোড করুন (ঐচ্ছিক)</span>
                 <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 w-full rounded border p-2 bg-gray-50" />
                 {(formData.leaderPhoto) && !file && <p className="text-xs text-gray-500 mt-1">বর্তমান ছবি: {formData.leaderPhoto.substring(0, 30)}...</p>}
               </label>
@@ -257,15 +264,15 @@ export default function AdminDashboard() {
             {activeTab === "settings" && (
               <>
                 <label className="block">
-                  <span className="text-sm font-medium">সভাপতির নাম</span>
+                  <span className="text-sm font-medium">নির্বাহী পরিচালকের নাম</span>
                   <input type="text" name="leaderName" className="mt-1 w-full rounded border p-2" value={formData.leaderName || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium">সভাপতির পদবি</span>
+                  <span className="text-sm font-medium">নির্বাহী পরিচালকের পদবি</span>
                   <input type="text" name="leaderRole" className="mt-1 w-full rounded border p-2" value={formData.leaderRole || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium">সভাপতির বাণী</span>
+                  <span className="text-sm font-medium">নির্বাহী পরিচালকের বাণী</span>
                   <textarea name="leaderMessage" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessage || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
