@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link"; // নতুন যুক্ত হলো
 import { login } from "@/lib/auth";
 
 export default function AdminLogin() {
@@ -24,6 +25,7 @@ export default function AdminLogin() {
       <form onSubmit={handleLogin} className="w-full max-w-md rounded-xl bg-white p-8 shadow-md">
         <h1 className="mb-6 text-2xl font-bold text-center text-emerald-800">অ্যাডমিন লগইন</h1>
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+        
         <label className="mb-4 block">
           <span className="mb-1 block text-sm font-medium text-gray-700">ইমেইল</span>
           <input type="email" required className="w-full rounded-lg border px-3 py-2" 
@@ -34,9 +36,18 @@ export default function AdminLogin() {
           <input type="password" required className="w-full rounded-lg border px-3 py-2" 
             value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
+        
         <button type="submit" className="w-full rounded-lg bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
           লগইন করুন
         </button>
+
+        {/* নতুন হোমপেজ বাটন */}
+        <div className="mt-6 text-center">
+          <Link href="/" className="text-sm font-medium text-emerald-700 hover:underline">
+            ← হোমপেজে ফিরে যান
+          </Link>
+        </div>
+        
       </form>
     </div>
   );
