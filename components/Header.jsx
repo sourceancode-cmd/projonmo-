@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation"; // usePathname যুক্ত হলো
 import AboutMenu from "@/components/AboutMenu";
 import { SITE, ABOUT, NAV } from "@/lib/site";
 import { useLang } from "@/lib/LanguageContext";
@@ -10,26 +10,26 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const { lang, toggleLang } = useLang();
   const router = useRouter();
+  const pathname = usePathname(); // বর্তমান পেজ চেক করার জন্য
   
-  // ক্লিক গোনার জন্য রেফ
   const clickCountRef = useRef(0);
   const clickTimeoutRef = useRef(null);
+
+  // অ্যাডমিন পেজে থাকলে হেডার দেখাবে না
+  if (pathname?.startsWith("/admin")) return null;
 
   const handleLogoClick = () => {
     clickCountRef.current += 1;
     
-    // ২ সেকেন্ড পর ক্লিক রিসেট হয়ে যাবে (যাতে ভুল করে ৫ বার ক্লিক হলে অ্যাডমিনে না ঢুকে যায়)
     if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
     clickTimeoutRef.current = setTimeout(() => {
       clickCountRef.current = 0;
     }, 2000);
 
-    // যদি ৫ বার ক্লিক হয়, তবে অ্যাডমিন পেজে পাঠিয়ে দেবে
     if (clickCountRef.current >= 5) {
       router.push("/admin");
-      clickCountRef.current = 0; // রিসেট
+      clickCountRef.current = 0;
     } else {
-      // ৫ বারের কম হলে হোমপেজে যাবে
       if (clickCountRef.current === 1) {
         router.push("/");
       }
@@ -48,7 +48,6 @@ export default function Header() {
       )}
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         
-        {/* লোগোতে ক্লিক করলে ৫ বার গুনবে */}
         <div 
           onClick={handleLogoClick} 
           className="flex cursor-pointer items-center gap-2 text-xl font-bold text-emerald-800"
