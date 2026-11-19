@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { getAuthInstance } from "@/lib/auth";
 import { onAuthStateChanged } from "firebase/auth";
 import { logout } from "@/lib/auth";
-import { db, storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, setDoc, getDocs, deleteDoc } from "firebase/firestore";
 
 export default function AdminDashboard() {
@@ -18,7 +17,6 @@ export default function AdminDashboard() {
   const [items, setItems] = useState([]);
   const [editId, setEditId] = useState(null);
   
-  // ছবি আপলোডের জন্য নতুন স্টেট
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -64,22 +62,35 @@ export default function AdminDashboard() {
     let finalData = { ...formData };
 
     try {
-      // ১. যদি নতুন ছবি সিলেক্ট করা থাকে, তবে আগে ছবি আপলোড হবে
+      // ১. Cloudinary-তে ছবি আপলোড (আপনার তথ্য এখানে বসানো হয়েছে)
       if (file) {
         setUploading(true);
-        const fileRef = ref(storage, `images/${Date.now()}_${file.name}`);
-        await uploadBytes(fileRef, file);
-        const downloadURL = await getDownloadURL(fileRef);
+        const formDataCloudinary = new FormData();
+        formDataCloudinary.append("file", file);
+        formDataCloudinary.append("upload_preset", "projonmo_upload"); 
+
+        const res = await fetch("https://api.cloudinary.com/v1_1/jzocx6ib/image/upload", {
+          method: "POST",
+          body: formDataCloudinary,
+        });
         
-        if (activeTab === "settings") {
-          finalData.leaderPhoto = downloadURL;
+        const data = await res.json();
+        
+        if (data.secure_url) {
+          if (activeTab === "settings") {
+            finalData.leaderPhoto = data.secure_url;
+          } else {
+            finalData.image = data.secure_url;
+          }
         } else {
-          finalData.image = downloadURL;
+          alert("ছবি আপলোড ব্যর্থ হয়েছে!");
+          setSaving(false);
+          setUploading(false);
+          return;
         }
         setUploading(false);
       }
 
-      // ২. ডেটা ফায়ারবেসে সেভ হবে
       if (finalData.order) finalData.order = parseInt(finalData.order);
 
       if (activeTab === "settings") {
@@ -106,7 +117,7 @@ export default function AdminDashboard() {
   const handleEdit = (item) => {
     setFormData(item);
     setEditId(item.id);
-    setFile(null); // নতুন ছবি আপলোডের জন্য রিসেট
+    setFile(null);
     window.scrollTo(0, 0);
   };
 
@@ -141,7 +152,6 @@ export default function AdminDashboard() {
           <form onSubmit={handleSave} className="space-y-4 rounded-xl bg-white p-6 shadow h-fit">
             <h2 className="text-lg font-semibold mb-4">{editId ? "এডিট করুন" : `নতুন ${activeTab} যোগ করুন`}</h2>
             
-            {/* ছবি আপলোড অপশন */}
             {activeTab !== "settings" && (
               <label className="block">
                 <span className="text-sm font-medium">ছবি আপলোড করুন (ঐচ্ছিক)</span>
