@@ -1,10 +1,15 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // usePathname যুক্ত হলো
 import { SITE, ABOUT, NAV } from "@/lib/site";
 import { useLang } from "@/lib/LanguageContext";
 
 export default function Footer() {
   const { lang } = useLang();
+  const pathname = usePathname(); // বর্তমান পেজ চেক করার জন্য
+
+  // অ্যাডমিন পেজে থাকলে ফুটার দেখাবে না
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <footer className="mt-16 bg-gray-900 text-gray-300">
