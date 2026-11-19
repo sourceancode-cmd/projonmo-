@@ -5,7 +5,7 @@ import { getAuthInstance } from "@/lib/auth";
 import { onAuthStateChanged } from "firebase/auth";
 import { logout } from "@/lib/auth";
 import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc } from "firebase/firestore";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -42,11 +42,16 @@ export default function AdminDashboard() {
     setSaving(true);
     try {
       const dataToSave = { ...formData };
-      // Order ফিল্ডকে নাম্বারে কনভার্ট করা
       if (dataToSave.order) dataToSave.order = parseInt(dataToSave.order);
       
-      await addDoc(collection(db, activeTab), dataToSave);
-      alert("সফলভাবে যোগ করা হয়েছে!");
+      if (activeTab === "settings") {
+        // সেটিংস আপডেট করার জন্য (নতুন ডকুমেন্ট না বানিয়ে আগেরটা আপডেট করবে)
+        await setDoc(doc(db, "settings", "site"), dataToSave, { merge: true });
+        alert("সেটিংস সফলভাবে আপডেট করা হয়েছে!");
+      } else {
+        await addDoc(collection(db, activeTab), dataToSave);
+        alert("সফলভাবে যোগ করা হয়েছে!");
+      }
       setFormData({});
     } catch (err) {
       alert("সমস্যা হয়েছে: " + err.message);
@@ -65,7 +70,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="mb-6 flex flex-wrap gap-2 border-b pb-2">
-          {["gallery", "sliders", "projects", "team"].map((tab) => (
+          {["gallery", "sliders", "projects", "team", "settings"].map((tab) => (
             <button key={tab} onClick={() => { setActiveTab(tab); setFormData({}); }} 
               className={`px-4 py-2 rounded ${activeTab === tab ? "bg-emerald-700 text-white" : "bg-gray-200"}`}>
               {tab.toUpperCase()}
@@ -76,14 +81,14 @@ export default function AdminDashboard() {
         <form onSubmit={handleSave} className="space-y-4 rounded-xl bg-white p-6 shadow">
           <h2 className="text-lg font-semibold mb-4">নতুন {activeTab} যোগ করুন</h2>
           
-          {/* ছবি (সবগুলোর জন্য) */}
-          <label className="block">
-            <span className="text-sm font-medium">ছবির লিংক (Image URL) *</span>
-            <input type="text" name="image" required className="mt-1 w-full rounded border p-2"
-              value={formData.image || ""} onChange={handleChange} />
-          </label>
+          {activeTab !== "settings" && (
+            <label className="block">
+              <span className="text-sm font-medium">ছবির লিংক (Image URL) *</span>
+              <input type="text" name="image" required className="mt-1 w-full rounded border p-2"
+                value={formData.image || ""} onChange={handleChange} />
+            </label>
+          )}
 
-          {/* Sliders এর জন্য */}
           {activeTab === "sliders" && (
             <>
               <label className="block">
@@ -109,7 +114,6 @@ export default function AdminDashboard() {
             </>
           )}
 
-          {/* Gallery এর জন্য */}
           {activeTab === "gallery" && (
             <>
               <label className="block">
@@ -125,7 +129,6 @@ export default function AdminDashboard() {
             </>
           )}
 
-          {/* Projects এর জন্য */}
           {activeTab === "projects" && (
             <>
               <label className="block">
@@ -167,7 +170,6 @@ export default function AdminDashboard() {
             </>
           )}
 
-          {/* Team এর জন্য */}
           {activeTab === "team" && (
             <>
               <label className="block">
@@ -191,15 +193,47 @@ export default function AdminDashboard() {
             </>
           )}
 
-          {/* Order (সবগুলোর জন্য) */}
-          <label className="block">
-            <span className="text-sm font-medium">ক্রম (Order - সংখ্যা)</span>
-            <input type="number" name="order" className="mt-1 w-full rounded border p-2"
-              value={formData.order || ""} onChange={handleChange} />
-          </label>
+          {/* সেটিংসের জন্য নতুন ফিল্ড */}
+          {activeTab === "settings" && (
+            <>
+              <label className="block">
+                <span className="text-sm font-medium">সভাপতির নাম (Leader Name)</span>
+                <input type="text" name="leaderName" className="mt-1 w-full rounded border p-2"
+                  value={formData.leaderName || ""} onChange={handleChange} />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium">সভাপতির পদবি (Leader Role)</span>
+                <input type="text" name="leaderRole" className="mt-1 w-full rounded border p-2"
+                  value={formData.leaderRole || ""} onChange={handleChange} />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium">সভাপতির ছবির লিংক (Leader Photo URL)</span>
+                <input type="text" name="leaderPhoto" className="mt-1 w-full rounded border p-2"
+                  value={formData.leaderPhoto || ""} onChange={handleChange} />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium">সভাপতির বাণী (Leader Message)</span>
+                <textarea name="leaderMessage" rows="5" className="mt-1 w-full rounded border p-2"
+                  value={formData.leaderMessage || ""} onChange={handleChange} />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium">অনুদানের তথ্য (Donate Info - e.g. bKash Number)</span>
+                <textarea name="donateInfo" rows="3" className="mt-1 w-full rounded border p-2"
+                  value={formData.donateInfo || ""} onChange={handleChange} />
+              </label>
+            </>
+          )}
+
+          {activeTab !== "settings" && (
+            <label className="block">
+              <span className="text-sm font-medium">ক্রম (Order - সংখ্যা)</span>
+              <input type="number" name="order" className="mt-1 w-full rounded border p-2"
+                value={formData.order || ""} onChange={handleChange} />
+            </label>
+          )}
 
           <button type="submit" disabled={saving} className="rounded bg-emerald-700 px-6 py-2 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50">
-            {saving ? "সেভ হচ্ছে..." : "সেভ করুন"}
+            {saving ? "সেভ হচ্ছে..." : (activeTab === "settings" ? "সেটিংস আপডেট করুন" : "সেভ করুন")}
           </button>
         </form>
       </div>
