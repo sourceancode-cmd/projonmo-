@@ -13,6 +13,7 @@ const FIELDS = [
 
 export default function ContactPage() {
   const { lang } = useLang();
+  // এখানে FIELDS থেকে বাংলা ও ইংরেজি লেবেল আলাদা করা হচ্ছে
   const translatedFields = FIELDS.map(f => ({...f, label: f.label[lang]}));
 
   return (
@@ -31,6 +32,7 @@ export default function ContactPage() {
             ></iframe>
           </div>
         </div>
+        {/* এখানে translatedFields পাস করা হয়েছে, FIELDS নয় */}
         <SimpleForm target="messages" fields={translatedFields} button={lang === "bn" ? "বার্তা পাঠান" : "Send Message"} />
       </div>
     </PageShell>
