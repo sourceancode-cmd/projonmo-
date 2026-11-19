@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { getAuthInstance } from "@/lib/auth";
 import { onAuthStateChanged } from "firebase/auth";
 import { logout } from "@/lib/auth";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, doc, setDoc, getDocs, deleteDoc } from "firebase/firestore";
 
 export default function AdminDashboard() {
@@ -15,11 +16,14 @@ export default function AdminDashboard() {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState([]);
-  const [editId, setEditId] = useState(null); // এডিট করার জন্য আইডি
+  const [editId, setEditId] = useState(null);
+  
+  // ছবি আপলোডের জন্য নতুন স্টেট
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
-  // ডেটা লোড করা
   const fetchData = async (tab) => {
-    if (tab === "settings") return; // সেটিংসের জন্য আলাদা
+    if (tab === "settings") return;
     const snap = await getDocs(collection(db, tab));
     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     setItems(data);
@@ -48,26 +52,49 @@ export default function AdminDashboard() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
+    let finalData = { ...formData };
+
     try {
-      const dataToSave = { ...formData };
-      if (dataToSave.order) dataToSave.order = parseInt(dataToSave.order);
+      // ১. যদি নতুন ছবি সিলেক্ট করা থাকে, তবে আগে ছবি আপলোড হবে
+      if (file) {
+        setUploading(true);
+        const fileRef = ref(storage, `images/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        const downloadURL = await getDownloadURL(fileRef);
+        
+        if (activeTab === "settings") {
+          finalData.leaderPhoto = downloadURL;
+        } else {
+          finalData.image = downloadURL;
+        }
+        setUploading(false);
+      }
+
+      // ২. ডেটা ফায়ারবেসে সেভ হবে
+      if (finalData.order) finalData.order = parseInt(finalData.order);
 
       if (activeTab === "settings") {
-        await setDoc(doc(db, "settings", "site"), dataToSave, { merge: true });
+        await setDoc(doc(db, "settings", "site"), finalData, { merge: true });
         alert("সেটিংস সফলভাবে আপডেট করা হয়েছে!");
       } else if (editId) {
-        // এডিট
-        await setDoc(doc(db, activeTab, editId), dataToSave, { merge: true });
+        await setDoc(doc(db, activeTab, editId), finalData, { merge: true });
         alert("সফলভাবে আপডেট করা হয়েছে!");
       } else {
-        // নতুন যোগ
-        await addDoc(collection(db, activeTab), dataToSave);
+        await addDoc(collection(db, activeTab), finalData);
         alert("সফলভাবে যোগ করা হয়েছে!");
       }
+      
       setFormData({});
+      setFile(null);
       setEditId(null);
       fetchData(activeTab);
     } catch (err) {
@@ -79,7 +106,8 @@ export default function AdminDashboard() {
   const handleEdit = (item) => {
     setFormData(item);
     setEditId(item.id);
-    window.scrollTo(0, 0); // উপরে স্ক্রল করে ফর্ম দেখাবে
+    setFile(null); // নতুন ছবি আপলোডের জন্য রিসেট
+    window.scrollTo(0, 0);
   };
 
   const handleDelete = async (id) => {
@@ -102,7 +130,7 @@ export default function AdminDashboard() {
 
         <div className="mb-6 flex flex-wrap gap-2 border-b pb-2">
           {["gallery", "sliders", "projects", "team", "settings"].map((tab) => (
-            <button key={tab} onClick={() => { setActiveTab(tab); setFormData({}); setEditId(null); }} 
+            <button key={tab} onClick={() => { setActiveTab(tab); setFormData({}); setEditId(null); setFile(null); }} 
               className={`px-4 py-2 rounded ${activeTab === tab ? "bg-emerald-700 text-white" : "bg-gray-200"}`}>
               {tab.toUpperCase()}
             </button>
@@ -110,15 +138,24 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
-          {/* ফর্ম সেকশন */}
           <form onSubmit={handleSave} className="space-y-4 rounded-xl bg-white p-6 shadow h-fit">
             <h2 className="text-lg font-semibold mb-4">{editId ? "এডিট করুন" : `নতুন ${activeTab} যোগ করুন`}</h2>
             
+            {/* ছবি আপলোড অপশন */}
             {activeTab !== "settings" && (
               <label className="block">
-                <span className="text-sm font-medium">ছবির লিংক (Image URL) *</span>
-                <input type="text" name="image" required className="mt-1 w-full rounded border p-2"
-                  value={formData.image || ""} onChange={handleChange} />
+                <span className="text-sm font-medium">ছবি আপলোড করুন (ঐচ্ছিক)</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 w-full rounded border p-2 bg-gray-50" />
+                {(formData.image) && !file && <p className="text-xs text-gray-500 mt-1">বর্তমান ছবি: {formData.image.substring(0, 30)}...</p>}
+                {file && <p className="text-xs text-emerald-600 mt-1">নতুন ছবি সিলেক্ট করা হয়েছে: {file.name}</p>}
+              </label>
+            )}
+
+            {activeTab === "settings" && (
+              <label className="block">
+                <span className="text-sm font-medium">সভাপতির ছবি আপলোড করুন (ঐচ্ছিক)</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 w-full rounded border p-2 bg-gray-50" />
+                {(formData.leaderPhoto) && !file && <p className="text-xs text-gray-500 mt-1">বর্তমান ছবি: {formData.leaderPhoto.substring(0, 30)}...</p>}
               </label>
             )}
 
@@ -126,23 +163,19 @@ export default function AdminDashboard() {
               <>
                 <label className="block">
                   <span className="text-sm font-medium">টাইটেল (Title) *</span>
-                  <input type="text" name="title" required className="mt-1 w-full rounded border p-2"
-                    value={formData.title || ""} onChange={handleChange} />
+                  <input type="text" name="title" required className="mt-1 w-full rounded border p-2" value={formData.title || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">সাবটাইটেল (Subtitle)</span>
-                  <input type="text" name="subtitle" className="mt-1 w-full rounded border p-2"
-                    value={formData.subtitle || ""} onChange={handleChange} />
+                  <input type="text" name="subtitle" className="mt-1 w-full rounded border p-2" value={formData.subtitle || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">বাটন টেক্সট (Button)</span>
-                  <input type="text" name="button" className="mt-1 w-full rounded border p-2"
-                    value={formData.button || ""} onChange={handleChange} />
+                  <input type="text" name="button" className="mt-1 w-full rounded border p-2" value={formData.button || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">লিংক (Link)</span>
-                  <input type="text" name="link" className="mt-1 w-full rounded border p-2"
-                    value={formData.link || ""} onChange={handleChange} />
+                  <input type="text" name="link" className="mt-1 w-full rounded border p-2" value={formData.link || ""} onChange={handleChange} />
                 </label>
               </>
             )}
@@ -151,13 +184,11 @@ export default function AdminDashboard() {
               <>
                 <label className="block">
                   <span className="text-sm font-medium">ক্যাপশন (Caption)</span>
-                  <input type="text" name="caption" className="mt-1 w-full rounded border p-2"
-                    value={formData.caption || ""} onChange={handleChange} />
+                  <input type="text" name="caption" className="mt-1 w-full rounded border p-2" value={formData.caption || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">ক্যাটাগরি (Category)</span>
-                  <input type="text" name="category" className="mt-1 w-full rounded border p-2"
-                    value={formData.category || ""} onChange={handleChange} />
+                  <input type="text" name="category" className="mt-1 w-full rounded border p-2" value={formData.category || ""} onChange={handleChange} />
                 </label>
               </>
             )}
@@ -166,29 +197,24 @@ export default function AdminDashboard() {
               <>
                 <label className="block">
                   <span className="text-sm font-medium">টাইটেল (Title) *</span>
-                  <input type="text" name="title" required className="mt-1 w-full rounded border p-2"
-                    value={formData.title || ""} onChange={handleChange} />
+                  <input type="text" name="title" required className="mt-1 w-full rounded border p-2" value={formData.title || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">সারসংক্ষেপ (Summary)</span>
-                  <input type="text" name="summary" className="mt-1 w-full rounded border p-2"
-                    value={formData.summary || ""} onChange={handleChange} />
+                  <input type="text" name="summary" className="mt-1 w-full rounded border p-2" value={formData.summary || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">বিস্তারিত (Body)</span>
-                  <textarea name="body" rows="4" className="mt-1 w-full rounded border p-2"
-                    value={formData.body || ""} onChange={handleChange} />
+                  <textarea name="body" rows="4" className="mt-1 w-full rounded border p-2" value={formData.body || ""} onChange={handleChange} />
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <label className="block">
                     <span className="text-sm font-medium">ক্যাটাগরি</span>
-                    <input type="text" name="category" className="mt-1 w-full rounded border p-2"
-                      value={formData.category || ""} onChange={handleChange} />
+                    <input type="text" name="category" className="mt-1 w-full rounded border p-2" value={formData.category || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">স্ট্যাটাস</span>
-                    <select name="status" className="mt-1 w-full rounded border p-2"
-                      value={formData.status || "ongoing"} onChange={handleChange}>
+                    <select name="status" className="mt-1 w-full rounded border p-2" value={formData.status || "ongoing"} onChange={handleChange}>
                       <option value="ongoing">চলমান</option>
                       <option value="upcoming">আসন্ন</option>
                       <option value="completed">সম্পন্ন</option>
@@ -202,18 +228,15 @@ export default function AdminDashboard() {
               <>
                 <label className="block">
                   <span className="text-sm font-medium">নাম (Name) *</span>
-                  <input type="text" name="name" required className="mt-1 w-full rounded border p-2"
-                    value={formData.name || ""} onChange={handleChange} />
+                  <input type="text" name="name" required className="mt-1 w-full rounded border p-2" value={formData.name || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">পদবি (Role)</span>
-                  <input type="text" name="role" className="mt-1 w-full rounded border p-2"
-                    value={formData.role || ""} onChange={handleChange} />
+                  <input type="text" name="role" className="mt-1 w-full rounded border p-2" value={formData.role || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">ধরন (Type)</span>
-                  <select name="type" className="mt-1 w-full rounded border p-2"
-                    value={formData.type || "committee"} onChange={handleChange}>
+                  <select name="type" className="mt-1 w-full rounded border p-2" value={formData.type || "committee"} onChange={handleChange}>
                     <option value="committee">কার্যনির্বাহী</option>
                     <option value="advisor">উপদেষ্টা</option>
                   </select>
@@ -225,28 +248,19 @@ export default function AdminDashboard() {
               <>
                 <label className="block">
                   <span className="text-sm font-medium">সভাপতির নাম</span>
-                  <input type="text" name="leaderName" className="mt-1 w-full rounded border p-2"
-                    value={formData.leaderName || ""} onChange={handleChange} />
+                  <input type="text" name="leaderName" className="mt-1 w-full rounded border p-2" value={formData.leaderName || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">সভাপতির পদবি</span>
-                  <input type="text" name="leaderRole" className="mt-1 w-full rounded border p-2"
-                    value={formData.leaderRole || ""} onChange={handleChange} />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium">সভাপতির ছবির লিংক</span>
-                  <input type="text" name="leaderPhoto" className="mt-1 w-full rounded border p-2"
-                    value={formData.leaderPhoto || ""} onChange={handleChange} />
+                  <input type="text" name="leaderRole" className="mt-1 w-full rounded border p-2" value={formData.leaderRole || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">সভাপতির বাণী</span>
-                  <textarea name="leaderMessage" rows="5" className="mt-1 w-full rounded border p-2"
-                    value={formData.leaderMessage || ""} onChange={handleChange} />
+                  <textarea name="leaderMessage" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessage || ""} onChange={handleChange} />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium">অনুদানের তথ্য</span>
-                  <textarea name="donateInfo" rows="3" className="mt-1 w-full rounded border p-2"
-                    value={formData.donateInfo || ""} onChange={handleChange} />
+                  <textarea name="donateInfo" rows="3" className="mt-1 w-full rounded border p-2" value={formData.donateInfo || ""} onChange={handleChange} />
                 </label>
               </>
             )}
@@ -254,24 +268,22 @@ export default function AdminDashboard() {
             {activeTab !== "settings" && (
               <label className="block">
                 <span className="text-sm font-medium">ক্রম (Order)</span>
-                <input type="number" name="order" className="mt-1 w-full rounded border p-2"
-                  value={formData.order || ""} onChange={handleChange} />
+                <input type="number" name="order" className="mt-1 w-full rounded border p-2" value={formData.order || ""} onChange={handleChange} />
               </label>
             )}
 
             <div className="flex gap-2">
-              <button type="submit" disabled={saving} className="rounded bg-emerald-700 px-6 py-2 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50">
-                {saving ? "সেভ হচ্ছে..." : (editId ? "আপডেট করুন" : "সেভ করুন")}
+              <button type="submit" disabled={saving || uploading} className="rounded bg-emerald-700 px-6 py-2 text-white font-semibold hover:bg-emerald-800 disabled:opacity-50">
+                {uploading ? "ছবি আপলোড হচ্ছে..." : saving ? "সেভ হচ্ছে..." : (editId ? "আপডেট করুন" : "সেভ করুন")}
               </button>
               {editId && (
-                <button type="button" onClick={() => {setEditId(null); setFormData({});}} className="rounded bg-gray-400 px-4 py-2 text-white">
+                <button type="button" onClick={() => {setEditId(null); setFormData({}); setFile(null);}} className="rounded bg-gray-400 px-4 py-2 text-white">
                   বাতিল
                 </button>
               )}
             </div>
           </form>
 
-          {/* লিস্ট সেকশন */}
           {activeTab !== "settings" && (
             <div className="rounded-xl bg-white p-6 shadow">
               <h2 className="text-lg font-semibold mb-4">বর্তমান {activeTab} লিস্ট</h2>
@@ -281,7 +293,6 @@ export default function AdminDashboard() {
                     <li key={item.id} className="flex items-center justify-between border-b pb-2">
                       <div>
                         <p className="font-semibold">{item.title || item.caption || item.name}</p>
-                        <p className="text-xs text-gray-500 truncate max-w-[200px]">{item.id}</p>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => handleEdit(item)} className="text-sm bg-blue-500 text-white px-2 py-1 rounded">এডিট</button>
