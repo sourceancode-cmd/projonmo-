@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AboutMenu from "@/components/AboutMenu";
 import { SITE, ABOUT, NAV } from "@/lib/site";
 import { useLang } from "@/lib/LanguageContext";
@@ -8,6 +9,32 @@ import { useLang } from "@/lib/LanguageContext";
 export default function Header() {
   const [open, setOpen] = useState(false);
   const { lang, toggleLang } = useLang();
+  const router = useRouter();
+  
+  // ক্লিক গোনার জন্য রেফ
+  const clickCountRef = useRef(0);
+  const clickTimeoutRef = useRef(null);
+
+  const handleLogoClick = () => {
+    clickCountRef.current += 1;
+    
+    // ২ সেকেন্ড পর ক্লিক রিসেট হয়ে যাবে (যাতে ভুল করে ৫ বার ক্লিক হলে অ্যাডমিনে না ঢুকে যায়)
+    if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+    clickTimeoutRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 2000);
+
+    // যদি ৫ বার ক্লিক হয়, তবে অ্যাডমিন পেজে পাঠিয়ে দেবে
+    if (clickCountRef.current >= 5) {
+      router.push("/admin");
+      clickCountRef.current = 0; // রিসেট
+    } else {
+      // ৫ বারের কম হলে হোমপেজে যাবে
+      if (clickCountRef.current === 1) {
+        router.push("/");
+      }
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b bg-white">
@@ -20,14 +47,20 @@ export default function Header() {
         </div>
       )}
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-emerald-800">
+        
+        {/* লোগোতে ক্লিক করলে ৫ বার গুনবে */}
+        <div 
+          onClick={handleLogoClick} 
+          className="flex cursor-pointer items-center gap-2 text-xl font-bold text-emerald-800"
+        >
           <img 
             src="https://pub-d943faf66c4d438c867600d375c5676e.r2.dev/projonmo%20image/01_logo_500x500_HQ.webp" 
             alt="Projonmo Logo" 
             className="h-10 w-auto" 
           />
           <span>{SITE.name[lang]}</span>
-        </Link>
+        </div>
+
         <nav className="hidden items-center gap-6 text-sm font-medium lg:flex">
           <Link href="/">{lang === "bn" ? "হোম" : "Home"}</Link>
           <AboutMenu />
@@ -35,7 +68,6 @@ export default function Header() {
             <Link key={l.href} href={l.href}>{l.label[lang]}</Link>
           ))}
           
-          {/* ভাষা পরিবর্তনের বাটন */}
           <button 
             onClick={toggleLang}
             className="rounded-full border border-emerald-700 px-3 py-1 text-emerald-800 hover:bg-emerald-50 font-bold"
