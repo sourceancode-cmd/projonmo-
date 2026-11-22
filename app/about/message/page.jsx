@@ -16,9 +16,7 @@ export default function MessagePage() {
       {message && (
         <div className="grid gap-8 md:grid-cols-[240px_1fr]">
           <div className="text-center">
-            {s.leaderPhoto && (
-              <img src={s.leaderPhoto} alt={s.leaderName || ""} className="mx-auto w-48 rounded-xl" />
-            )}
+            {s.leaderPhoto && <img src={s.leaderPhoto} alt={s.leaderName || ""} className="mx-auto w-48 rounded-xl" />}
             <p className="mt-3 font-semibold">{s.leaderName}</p>
             <p className="text-sm text-gray-600">{role}</p>
           </div>
