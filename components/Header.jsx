@@ -20,12 +20,22 @@ export default function Header() {
   // অ্যাডমিন প্যানেলে হেডার দেখাবে না
   if (pathname?.startsWith("/admin")) return null;
 
-  const handleLogoClick = () => {
+  const handleLogoClick = (e) => {
     clickCountRef.current += 1;
+    
+    // ২ সেকেন্ড পর ক্লিকের সংখ্যা রিসেট হবে
     if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
-    clickTimeoutRef.current = setTimeout(() => { clickCountRef.current = 0; }, 2000);
-    if (clickCountRef.current >= 5) { router.push("/admin"); clickCountRef.current = 0; }
-    else { if (clickCountRef.current === 1) router.push("/"); }
+    clickTimeoutRef.current = setTimeout(() => { 
+      clickCountRef.current = 0; 
+    }, 2000);
+
+    // যদি ৫ বার ক্লিক হয়, তবে হোমপেজে যাওয়া বন্ধ করে অ্যাডমিনে পাঠাবে
+    if (clickCountRef.current >= 5) {
+      e.preventDefault(); // হোমপেজে যাওয়া আটকে দেবে
+      router.push("/admin");
+      clickCountRef.current = 0; 
+    }
+    // ৫ বারের কম হলে কিছু করবে না, Link নিজে থেকেই হোমপেজে নিয়ে যাবে
   };
 
   // ফায়ারবেস থেকে ডেটা না এলে ডিফল্ট মান দেখাবে
@@ -51,7 +61,9 @@ export default function Header() {
       )}
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         
-        <div 
+        {/* এখানে div এর জায়গায় Link ব্যবহার করা হলো */}
+        <Link 
+          href="/"
           onClick={handleLogoClick} 
           className="flex cursor-pointer items-center gap-2 text-xl font-bold text-emerald-800"
         >
@@ -61,13 +73,17 @@ export default function Header() {
             className="h-10 w-auto" 
           />
           <span>{siteName}</span>
-        </div>
+        </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium lg:flex">
           <Link href="/">{lang === "bn" ? "হোম" : "Home"}</Link>
+          
           <AboutMenu />
+          
           {NAV.map((l) => (
-            <Link key={l.href} href={l.href}>{l.label[lang]}</Link>
+            <Link key={l.href} href={l.href} className="hover:text-emerald-700">
+              {l.label[lang]}
+            </Link>
           ))}
           
           <button 
@@ -84,6 +100,7 @@ export default function Header() {
             {lang === "bn" ? "অনুদান দিন" : "Donate"}
           </Link>
         </nav>
+        
         <button
           type="button"
           aria-label="মেনু"
@@ -94,6 +111,7 @@ export default function Header() {
           ☰
         </button>
       </div>
+      
       {open && (
         <nav className="border-t px-4 py-3 lg:hidden">
           {[{ href: "/", label: { bn: "হোম", en: "Home" } }, ...ABOUT, ...NAV, { href: "/donate", label: { bn: "অনুদান দিন", en: "Donate" } }].map(
@@ -102,7 +120,7 @@ export default function Header() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="block py-2 text-sm font-medium"
+                className="block py-2 text-sm font-medium hover:text-emerald-700"
               >
                 {l.label[lang]}
               </Link>
