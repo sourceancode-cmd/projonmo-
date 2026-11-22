@@ -2,11 +2,11 @@
 import Link from "next/link";
 import HeroSlider from "@/components/HeroSlider";
 import { useList, useDoc } from "@/lib/content";
-import { SITE, WORK, STATS } from "@/lib/site";
 import { useLang } from "@/lib/LanguageContext";
 
 export default function HomePage() {
   const { items: projects } = useList("projects");
+  const { items: workItems } = useList("work"); // WORK কালেকশন থেকে লোড
   const { data: s } = useDoc("settings", "site");
   const { lang } = useLang();
 
@@ -15,14 +15,12 @@ export default function HomePage() {
       <HeroSlider />
 
       <section className="mx-auto max-w-6xl px-4 py-14">
-        <h2 className="text-center text-3xl font-bold">
-          {lang === "bn" ? "আমাদের কার্যক্রম" : "Our Activities"}
-        </h2>
+        <h2 className="text-center text-3xl font-bold">{lang === "bn" ? "আমাদের কার্যক্রম" : "Our Activities"}</h2>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {WORK.map((w) => (
-            <div key={w.title.en} className="rounded-xl border bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-emerald-800">{w.title[lang]}</h3>
-              <p className="mt-2 text-sm text-gray-600">{w.text[lang]}</p>
+          {workItems.map((w) => (
+            <div key={w.id} className="rounded-xl border bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-emerald-800">{w.title}</h3>
+              <p className="mt-2 text-sm text-gray-600">{w.text}</p>
             </div>
           ))}
         </div>
@@ -31,28 +29,12 @@ export default function HomePage() {
       <section className="bg-emerald-50">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <h2 className="text-3xl font-bold">{lang === "bn" ? "আমাদের পরিচয়" : "About Us"}</h2>
-          <p className="mt-4 max-w-3xl leading-8 text-gray-700">{SITE.description[lang]}</p>
-          <Link
-            href="/about"
-            className="mt-6 inline-block rounded-full bg-emerald-700 px-6 py-2.5 font-semibold text-white hover:bg-emerald-800"
-          >
+          <p className="mt-4 max-w-3xl leading-8 text-gray-700">{s?.description || ""}</p>
+          <Link href="/about" className="mt-6 inline-block rounded-full bg-emerald-700 px-6 py-2.5 font-semibold text-white hover:bg-emerald-800">
             {lang === "bn" ? "বিস্তারিত জানুন" : "Learn More"}
           </Link>
         </div>
       </section>
-
-      {STATS.length > 0 && (
-        <section className="bg-emerald-800 text-white">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-10 text-center md:grid-cols-4">
-            {STATS.map((x) => (
-              <div key={x.label}>
-                <p className="text-3xl font-bold">{x.value}</p>
-                <p className="mt-1 text-sm text-emerald-100">{x.label}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {projects.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 py-14">
@@ -64,19 +46,11 @@ export default function HomePage() {
           </div>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {projects.slice(0, 3).map((p) => (
-              <Link
-                key={p.id}
-                href={`/projects/detail?id=${p.id}`}
-                className="overflow-hidden rounded-xl border bg-white shadow-sm transition hover:shadow-md"
-              >
-                {p.image && (
-                  <img src={p.image} alt={p.title} loading="lazy" className="h-48 w-full object-cover" />
-                )}
+              <Link key={p.id} href={`/projects/detail?id=${p.id}`} className="overflow-hidden rounded-xl border bg-white shadow-sm transition hover:shadow-md">
+                {p.image && <img src={p.image} alt={p.title} loading="lazy" className="h-48 w-full object-cover" />}
                 <div className="p-4">
                   <h3 className="text-lg font-semibold">{p.title}</h3>
-                  {p.summary && (
-                    <p className="mt-1 line-clamp-3 text-sm text-gray-600">{p.summary}</p>
-                  )}
+                  {p.summary && <p className="mt-1 line-clamp-3 text-sm text-gray-600">{p.summary}</p>}
                 </div>
               </Link>
             ))}
@@ -87,9 +61,7 @@ export default function HomePage() {
       {s?.leaderMessage && (
         <section className="bg-gray-50">
           <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-14 md:grid-cols-[220px_1fr]">
-            {s.leaderPhoto && (
-              <img src={s.leaderPhoto} alt={s.leaderName || ""} className="mx-auto w-48 rounded-xl" />
-            )}
+            {s.leaderPhoto && <img src={s.leaderPhoto} alt={s.leaderName || ""} className="mx-auto w-48 rounded-xl" />}
             <div>
               <h2 className="text-2xl font-bold">{s.leaderName}</h2>
               <p className="text-sm text-gray-600">{s.leaderRole}</p>
@@ -105,16 +77,10 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-14 text-center">
         <h2 className="text-3xl font-bold">{lang === "bn" ? "আমাদের সাথে যুক্ত হোন" : "Join Us"}</h2>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/volunteer"
-            className="rounded-full bg-emerald-700 px-6 py-2.5 font-semibold text-white hover:bg-emerald-800"
-          >
+          <Link href="/volunteer" className="rounded-full bg-emerald-700 px-6 py-2.5 font-semibold text-white hover:bg-emerald-800">
             {lang === "bn" ? "স্বেচ্ছাসেবক হোন" : "Become a Volunteer"}
           </Link>
-          <Link
-            href="/donate"
-            className="rounded-full border border-emerald-700 px-6 py-2.5 font-semibold text-emerald-800"
-          >
+          <Link href="/donate" className="rounded-full border border-emerald-700 px-6 py-2.5 font-semibold text-emerald-800">
             {lang === "bn" ? "অনুদান দিন" : "Donate Now"}
           </Link>
         </div>
