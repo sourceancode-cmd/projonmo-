@@ -25,14 +25,14 @@ export default function ProjectsPage() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((p) => (
           <Link key={p.id} href={`/projects/detail?id=${p.id}`} className="group overflow-hidden rounded-xl border bg-white shadow-sm transition hover:shadow-md">
-            {p.image && <img src={p.image} alt={p.title} loading="lazy" className="h-48 w-full object-cover" />}
+            {p.image && <img src={p.image} alt={lang === "bn" ? p.titleBn : p.titleEn} loading="lazy" className="h-48 w-full object-cover" />}
             <div className="p-4">
               <div className="mb-2 flex gap-2 text-xs">
                 {p.category && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800">{p.category}</span>}
                 {STATUS[p.status] && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">{STATUS[p.status]}</span>}
               </div>
-              <h2 className="text-lg font-semibold group-hover:text-emerald-700">{p.title}</h2>
-              {p.summary && <p className="mt-1 line-clamp-3 text-sm text-gray-600">{p.summary}</p>}
+              <h2 className="text-lg font-semibold group-hover:text-emerald-700">{lang === "bn" ? p.titleBn : p.titleEn}</h2>
+              <p className="mt-1 line-clamp-3 text-sm text-gray-600">{lang === "bn" ? p.summaryBn : p.summaryEn}</p>
             </div>
           </Link>
         ))}
