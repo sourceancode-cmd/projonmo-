@@ -19,9 +19,28 @@ export default function AdminDashboard() {
   
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [translating, setTranslating] = useState(false); // নতুন স্টেট
 
   const TABS = ["gallery", "sliders", "projects", "team", "work", "volunteers", "messages", "settings"];
   const READ_ONLY_TABS = ["volunteers", "messages"];
+
+  // গুগল ট্রান্সলেট এর বদলে MyMemory API ব্যবহার করা হচ্ছে
+  const translateText = async (text, setTargetField) => {
+    if (!text) return;
+    setTranslating(true);
+    try {
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=bn|en`);
+      const data = await res.json();
+      if (data.responseData && data.responseData.translatedText) {
+        setFormData(prev => ({ ...prev, [setTargetField]: data.responseData.translatedText }));
+      } else {
+        alert("অনুবাদ করা যায়নি, ম্যানুয়ালি লিখুন।");
+      }
+    } catch (err) {
+      alert("অনুবাদ সার্ভারে সমস্যা হয়েছে।");
+    }
+    setTranslating(false);
+  };
 
   const fetchData = async (tab) => {
     if (tab === "settings") {
@@ -172,7 +191,7 @@ export default function AdminDashboard() {
                 </label>
               )}
 
-              {/* ============ SETTINGS SECTION (বাংলা-ইংরেজি আলাদা) ============ */}
+              {/* ============ SETTINGS SECTION ============ */}
               {activeTab === "settings" && (
                 <>
                   <label className="block">
@@ -181,7 +200,10 @@ export default function AdminDashboard() {
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">সাইটের নাম (English)</span>
-                    <input type="text" name="siteNameEn" className="mt-1 w-full rounded border p-2" value={formData.siteNameEn || ""} onChange={handleChange} />
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="siteNameEn" className="w-full rounded border p-2" value={formData.siteNameEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.siteNameBn, "siteNameEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">ট্যাগলাইন (বাংলা)</span>
@@ -189,7 +211,10 @@ export default function AdminDashboard() {
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">ট্যাগলাইন (English)</span>
-                    <input type="text" name="taglineEn" className="mt-1 w-full rounded border p-2" value={formData.taglineEn || ""} onChange={handleChange} />
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="taglineEn" className="w-full rounded border p-2" value={formData.taglineEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.taglineBn, "taglineEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">ঠিকানা (বাংলা)</span>
@@ -197,7 +222,10 @@ export default function AdminDashboard() {
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">ঠিকানা (English)</span>
-                    <input type="text" name="addressEn" className="mt-1 w-full rounded border p-2" value={formData.addressEn || ""} onChange={handleChange} />
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="addressEn" className="w-full rounded border p-2" value={formData.addressEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.addressBn, "addressEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">ফোন</span>
@@ -211,82 +239,141 @@ export default function AdminDashboard() {
                     <span className="text-sm font-medium">ফেসবুক লিংক</span>
                     <input type="text" name="facebook" className="mt-1 w-full rounded border p-2" value={formData.facebook || ""} onChange={handleChange} />
                   </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">মিশন (বাংলা)</span>
-                    <textarea name="missionBn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.missionBn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">মিশন (English)</span>
-                    <textarea name="missionEn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.missionEn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">ভিশন (বাংলা)</span>
-                    <textarea name="visionBn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.visionBn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">ভিশন (English)</span>
-                    <textarea name="visionEn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.visionEn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">নির্বাহী পরিচালকের ছবি আপলোড</span>
-                    <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 w-full rounded border p-2 bg-gray-50" />
-                    {(formData.leaderPhoto) && !file && <p className="text-xs text-gray-500 mt-1">বর্তমান ছবি: {formData.leaderPhoto.substring(0, 30)}...</p>}
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">নির্বাহী পরিচালকের নাম</span>
-                    <input type="text" name="leaderName" className="mt-1 w-full rounded border p-2" value={formData.leaderName || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">পদবি (বাংলা)</span>
-                    <input type="text" name="leaderRoleBn" className="mt-1 w-full rounded border p-2" value={formData.leaderRoleBn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">পদবি (English)</span>
-                    <input type="text" name="leaderRoleEn" className="mt-1 w-full rounded border p-2" value={formData.leaderRoleEn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">বাণী (বাংলা)</span>
-                    <textarea name="leaderMessageBn" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessageBn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-medium">বাণী (English)</span>
-                    <textarea name="leaderMessageEn" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessageEn || ""} onChange={handleChange} />
-                  </label>
-                  <label className="block">
+                  
+                  <div className="border-t pt-4 mt-4">
+                    <label className="block">
+                      <span className="text-sm font-medium">মিশন (বাংলা)</span>
+                      <textarea name="missionBn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.missionBn || ""} onChange={handleChange} />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium">মিশন (English)</span>
+                      <div className="flex gap-2 mt-1">
+                        <textarea name="missionEn" rows="2" className="w-full rounded border p-2" value={formData.missionEn || ""} onChange={handleChange} />
+                        <button type="button" onClick={() => translateText(formData.missionBn, "missionEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <label className="block">
+                      <span className="text-sm font-medium">ভিশন (বাংলা)</span>
+                      <textarea name="visionBn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.visionBn || ""} onChange={handleChange} />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium">ভিশন (English)</span>
+                      <div className="flex gap-2 mt-1">
+                        <textarea name="visionEn" rows="2" className="w-full rounded border p-2" value={formData.visionEn || ""} onChange={handleChange} />
+                        <button type="button" onClick={() => translateText(formData.visionBn, "visionEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <label className="block">
+                      <span className="text-sm font-medium">নির্বাহী পরিচালকের ছবি আপলোড</span>
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="mt-1 w-full rounded border p-2 bg-gray-50" />
+                      {(formData.leaderPhoto) && !file && <p className="text-xs text-gray-500 mt-1">বর্তমান ছবি: {formData.leaderPhoto.substring(0, 30)}...</p>}
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium">নির্বাহী পরিচালকের নাম</span>
+                      <input type="text" name="leaderName" className="mt-1 w-full rounded border p-2" value={formData.leaderName || ""} onChange={handleChange} />
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="block">
+                        <span className="text-sm font-medium">পদবি (বাংলা)</span>
+                        <input type="text" name="leaderRoleBn" className="mt-1 w-full rounded border p-2" value={formData.leaderRoleBn || ""} onChange={handleChange} />
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-medium">পদবি (English)</span>
+                        <div className="flex gap-1 mt-1">
+                          <input type="text" name="leaderRoleEn" className="w-full rounded border p-2" value={formData.leaderRoleEn || ""} onChange={handleChange} />
+                          <button type="button" onClick={() => translateText(formData.leaderRoleBn, "leaderRoleEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                        </div>
+                      </label>
+                    </div>
+                    <label className="block mt-2">
+                      <span className="text-sm font-medium">বাণী (বাংলা)</span>
+                      <textarea name="leaderMessageBn" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessageBn || ""} onChange={handleChange} />
+                    </label>
+                    <label className="block mt-2">
+                      <span className="text-sm font-medium">বাণী (English)</span>
+                      <div className="flex gap-2 mt-1">
+                        <textarea name="leaderMessageEn" rows="5" className="w-full rounded border p-2" value={formData.leaderMessageEn || ""} onChange={handleChange} />
+                        <button type="button" onClick={() => translateText(formData.leaderMessageBn, "leaderMessageEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  <label className="block border-t pt-4 mt-4">
                     <span className="text-sm font-medium">অনুদানের তথ্য</span>
                     <textarea name="donateInfo" rows="3" className="mt-1 w-full rounded border p-2" value={formData.donateInfo || ""} onChange={handleChange} />
                   </label>
                 </>
               )}
 
-              {/* ... (বাকি ট্যাবগুলোর ফর্ম আগের মতোই থাকবে: sliders, gallery, projects, team, work) ... */}
-
+              {/* ============ WORK SECTION ============ */}
               {activeTab === "work" && (
                 <>
                   <label className="block">
-                    <span className="text-sm font-medium">কার্যক্রমের নাম (Title) *</span>
-                    <input type="text" name="title" required className="mt-1 w-full rounded border p-2" value={formData.title || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">কার্যক্রমের নাম (বাংলা) *</span>
+                    <input type="text" name="titleBn" required className="mt-1 w-full rounded border p-2" value={formData.titleBn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">বিবরণ (Text)</span>
-                    <textarea name="text" rows="3" className="mt-1 w-full rounded border p-2" value={formData.text || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">কার্যক্রমের নাম (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="titleEn" className="w-full rounded border p-2" value={formData.titleEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.titleBn, "titleEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বিবরণ (বাংলা)</span>
+                    <textarea name="textBn" rows="3" className="mt-1 w-full rounded border p-2" value={formData.textBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বিবরণ (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <textarea name="textEn" rows="3" className="w-full rounded border p-2" value={formData.textEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.textBn, "textEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                 </>
               )}
 
+              {/* ============ SLIDERS SECTION ============ */}
               {activeTab === "sliders" && (
                 <>
                   <label className="block">
-                    <span className="text-sm font-medium">টাইটেল (Title) *</span>
-                    <input type="text" name="title" required className="mt-1 w-full rounded border p-2" value={formData.title || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">টাইটেল (বাংলা) *</span>
+                    <input type="text" name="titleBn" required className="mt-1 w-full rounded border p-2" value={formData.titleBn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">সাবটাইটেল (Subtitle)</span>
-                    <input type="text" name="subtitle" className="mt-1 w-full rounded border p-2" value={formData.subtitle || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">টাইটেল (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="titleEn" className="w-full rounded border p-2" value={formData.titleEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.titleBn, "titleEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">বাটন টেক্সট (Button)</span>
-                    <input type="text" name="button" className="mt-1 w-full rounded border p-2" value={formData.button || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">সাবটাইটেল (বাংলা)</span>
+                    <input type="text" name="subtitleBn" className="mt-1 w-full rounded border p-2" value={formData.subtitleBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">সাবটাইটেল (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="subtitleEn" className="w-full rounded border p-2" value={formData.subtitleEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.subtitleBn, "subtitleEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বাটন (বাংলা)</span>
+                    <input type="text" name="buttonBn" className="mt-1 w-full rounded border p-2" value={formData.buttonBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বাটন (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="buttonEn" className="w-full rounded border p-2" value={formData.buttonEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.buttonBn, "buttonEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">লিংক (Link)</span>
@@ -298,11 +385,18 @@ export default function AdminDashboard() {
               {activeTab === "gallery" && (
                 <>
                   <label className="block">
-                    <span className="text-sm font-medium">ক্যাপশন (Caption)</span>
-                    <input type="text" name="caption" className="mt-1 w-full rounded border p-2" value={formData.caption || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">ক্যাপশন (বাংলা)</span>
+                    <input type="text" name="captionBn" className="mt-1 w-full rounded border p-2" value={formData.captionBn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">ক্যাটাগরি (Category)</span>
+                    <span className="text-sm font-medium">ক্যাপশন (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="captionEn" className="w-full rounded border p-2" value={formData.captionEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.captionBn, "captionEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">ক্যাটাগরি</span>
                     <input type="text" name="category" className="mt-1 w-full rounded border p-2" value={formData.category || ""} onChange={handleChange} />
                   </label>
                 </>
@@ -311,16 +405,37 @@ export default function AdminDashboard() {
               {activeTab === "projects" && (
                 <>
                   <label className="block">
-                    <span className="text-sm font-medium">টাইটেল (Title) *</span>
-                    <input type="text" name="title" required className="mt-1 w-full rounded border p-2" value={formData.title || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">টাইটেল (বাংলা) *</span>
+                    <input type="text" name="titleBn" required className="mt-1 w-full rounded border p-2" value={formData.titleBn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">সারসংক্ষেপ (Summary)</span>
-                    <input type="text" name="summary" className="mt-1 w-full rounded border p-2" value={formData.summary || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">টাইটেল (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="titleEn" className="w-full rounded border p-2" value={formData.titleEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.titleBn, "titleEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">বিস্তারিত (Body)</span>
-                    <textarea name="body" rows="4" className="mt-1 w-full rounded border p-2" value={formData.body || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">সারসংক্ষেপ (বাংলা)</span>
+                    <input type="text" name="summaryBn" className="mt-1 w-full rounded border p-2" value={formData.summaryBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">সারসংক্ষেপ (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="summaryEn" className="w-full rounded border p-2" value={formData.summaryEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.summaryBn, "summaryEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বিস্তারিত (বাংলা)</span>
+                    <textarea name="bodyBn" rows="4" className="mt-1 w-full rounded border p-2" value={formData.bodyBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বিস্তারিত (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <textarea name="bodyEn" rows="4" className="w-full rounded border p-2" value={formData.bodyEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.bodyBn, "bodyEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <div className="grid grid-cols-2 gap-4">
                     <label className="block">
@@ -346,8 +461,15 @@ export default function AdminDashboard() {
                     <input type="text" name="name" required className="mt-1 w-full rounded border p-2" value={formData.name || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">পদবি (Role)</span>
-                    <input type="text" name="role" className="mt-1 w-full rounded border p-2" value={formData.role || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">পদবি (বাংলা)</span>
+                    <input type="text" name="roleBn" className="mt-1 w-full rounded border p-2" value={formData.roleBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">পদবি (English)</span>
+                    <div className="flex gap-2 mt-1">
+                      <input type="text" name="roleEn" className="w-full rounded border p-2" value={formData.roleEn || ""} onChange={handleChange} />
+                      <button type="button" onClick={() => translateText(formData.roleBn, "roleEn")} className="bg-blue-500 text-white px-2 rounded text-sm disabled:opacity-50" disabled={translating}>AUTO</button>
+                    </div>
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">ধরন (Type)</span>
@@ -402,7 +524,7 @@ export default function AdminDashboard() {
                           </>
                         )}
                         {activeTab !== "volunteers" && activeTab !== "messages" && (
-                          <p className="font-semibold">{item.title || item.caption || item.name}</p>
+                          <p className="font-semibold">{item.titleBn || item.captionBn || item.name}</p>
                         )}
                       </div>
                       <div className="flex gap-2">
