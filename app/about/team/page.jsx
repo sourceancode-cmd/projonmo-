@@ -30,7 +30,7 @@ export default function TeamPage() {
                     <div className="mx-auto h-32 w-32 rounded-full bg-gray-200" />
                   )}
                   <h3 className="mt-3 font-semibold">{m.name}</h3>
-                  <p className="text-sm text-gray-600">{m.role}</p>
+                  <p className="text-sm text-gray-600">{lang === "bn" ? m.roleBn : m.roleEn}</p>
                 </div>
               ))}
             </div>
