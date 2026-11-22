@@ -21,9 +21,9 @@ function Detail() {
   }
 
   return (
-    <PageShell title={p.title} subtitle={[p.category, STATUS[p.status], p.date].filter(Boolean).join(" · ")}>
-      {p.image && <img src={p.image} alt={p.title} className="mb-6 max-h-[28rem] w-full rounded-xl object-cover" />}
-      <div className="whitespace-pre-line leading-8 text-gray-800">{p.body || p.summary}</div>
+    <PageShell title={lang === "bn" ? p.titleBn : p.titleEn} subtitle={[p.category, STATUS[p.status], p.date].filter(Boolean).join(" · ")}>
+      {p.image && <img src={p.image} alt={lang === "bn" ? p.titleBn : p.titleEn} className="mb-6 max-h-[28rem] w-full rounded-xl object-cover" />}
+      <div className="whitespace-pre-line leading-8 text-gray-800">{lang === "bn" ? p.bodyBn : p.bodyEn}</div>
       <Link href="/projects" className="mt-8 inline-block text-emerald-700 underline">{lang === "bn" ? "← সব প্রকল্প" : "← All Projects"}</Link>
     </PageShell>
   );
