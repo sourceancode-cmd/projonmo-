@@ -172,19 +172,32 @@ export default function AdminDashboard() {
                 </label>
               )}
 
+              {/* ============ SETTINGS SECTION (বাংলা-ইংরেজি আলাদা) ============ */}
               {activeTab === "settings" && (
                 <>
                   <label className="block">
-                    <span className="text-sm font-medium">সাইটের নাম</span>
-                    <input type="text" name="siteName" className="mt-1 w-full rounded border p-2" value={formData.siteName || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">সাইটের নাম (বাংলা)</span>
+                    <input type="text" name="siteNameBn" className="mt-1 w-full rounded border p-2" value={formData.siteNameBn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">সাইটের ট্যাগলাইন (যেমন: বিশ্বাস · নিরাপত্তা)</span>
-                    <input type="text" name="tagline" className="mt-1 w-full rounded border p-2" value={formData.tagline || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">সাইটের নাম (English)</span>
+                    <input type="text" name="siteNameEn" className="mt-1 w-full rounded border p-2" value={formData.siteNameEn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">ঠিকানা</span>
-                    <input type="text" name="address" className="mt-1 w-full rounded border p-2" value={formData.address || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">ট্যাগলাইন (বাংলা)</span>
+                    <input type="text" name="taglineBn" className="mt-1 w-full rounded border p-2" value={formData.taglineBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">ট্যাগলাইন (English)</span>
+                    <input type="text" name="taglineEn" className="mt-1 w-full rounded border p-2" value={formData.taglineEn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">ঠিকানা (বাংলা)</span>
+                    <input type="text" name="addressBn" className="mt-1 w-full rounded border p-2" value={formData.addressBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">ঠিকানা (English)</span>
+                    <input type="text" name="addressEn" className="mt-1 w-full rounded border p-2" value={formData.addressEn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">ফোন</span>
@@ -199,12 +212,20 @@ export default function AdminDashboard() {
                     <input type="text" name="facebook" className="mt-1 w-full rounded border p-2" value={formData.facebook || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">মিশন</span>
-                    <textarea name="mission" rows="3" className="mt-1 w-full rounded border p-2" value={formData.mission || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">মিশন (বাংলা)</span>
+                    <textarea name="missionBn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.missionBn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">ভিশন</span>
-                    <textarea name="vision" rows="3" className="mt-1 w-full rounded border p-2" value={formData.vision || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">মিশন (English)</span>
+                    <textarea name="missionEn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.missionEn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">ভিশন (বাংলা)</span>
+                    <textarea name="visionBn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.visionBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">ভিশন (English)</span>
+                    <textarea name="visionEn" rows="2" className="mt-1 w-full rounded border p-2" value={formData.visionEn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">নির্বাহী পরিচালকের ছবি আপলোড</span>
@@ -216,12 +237,20 @@ export default function AdminDashboard() {
                     <input type="text" name="leaderName" className="mt-1 w-full rounded border p-2" value={formData.leaderName || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">নির্বাহী পরিচালকের পদবি</span>
-                    <input type="text" name="leaderRole" className="mt-1 w-full rounded border p-2" value={formData.leaderRole || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">পদবি (বাংলা)</span>
+                    <input type="text" name="leaderRoleBn" className="mt-1 w-full rounded border p-2" value={formData.leaderRoleBn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium">নির্বাহী পরিচালকের বাণী</span>
-                    <textarea name="leaderMessage" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessage || ""} onChange={handleChange} />
+                    <span className="text-sm font-medium">পদবি (English)</span>
+                    <input type="text" name="leaderRoleEn" className="mt-1 w-full rounded border p-2" value={formData.leaderRoleEn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বাণী (বাংলা)</span>
+                    <textarea name="leaderMessageBn" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessageBn || ""} onChange={handleChange} />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium">বাণী (English)</span>
+                    <textarea name="leaderMessageEn" rows="5" className="mt-1 w-full rounded border p-2" value={formData.leaderMessageEn || ""} onChange={handleChange} />
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium">অনুদানের তথ্য</span>
@@ -229,6 +258,8 @@ export default function AdminDashboard() {
                   </label>
                 </>
               )}
+
+              {/* ... (বাকি ট্যাবগুলোর ফর্ম আগের মতোই থাকবে: sliders, gallery, projects, team, work) ... */}
 
               {activeTab === "work" && (
                 <>
