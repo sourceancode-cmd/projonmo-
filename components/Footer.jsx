@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ABOUT, NAV } from "@/lib/site";
+import { SITE, ABOUT, NAV } from "@/lib/site";
 import { useLang } from "@/lib/LanguageContext";
 import { useDoc } from "@/lib/content";
 
@@ -10,10 +10,25 @@ export default function Footer() {
   const pathname = usePathname();
   const { data: s } = useDoc("settings", "site");
 
+  // অ্যাডমিন প্যানেলে ফুটার দেখাবে না
   if (pathname?.startsWith("/admin")) return null;
 
-  const siteName = s?.siteName || (lang === "bn" ? "প্রজন্ম যুব উন্নয়ন সংস্থা" : "Projonmo Jubo Unnoyn Songstha");
-  const tagline = s?.tagline || (lang === "bn" ? "বিশ্বাস · নিরাপত্তা · নিশ্চয়তা" : "Trust · Security · Certainty");
+  // ফায়ারবেস থেকে ডেটা না এলে ডিফল্ট মান দেখাবে
+  const siteName = lang === "bn" 
+    ? (s?.siteNameBn || SITE.name.bn) 
+    : (s?.siteNameEn || SITE.name.en);
+    
+  const tagline = lang === "bn" 
+    ? (s?.taglineBn || SITE.tagline.bn) 
+    : (s?.taglineEn || SITE.tagline.en);
+
+  const address = lang === "bn" 
+    ? (s?.addressBn || SITE.address.bn) 
+    : (s?.addressEn || SITE.address.en);
+
+  const phone = s?.phone || SITE.phone;
+  const email = s?.email || SITE.email;
+  const facebook = s?.facebook || SITE.facebook;
 
   return (
     <footer className="mt-16 bg-gray-900 text-gray-300">
@@ -26,17 +41,21 @@ export default function Footer() {
           <p className="mb-3 font-semibold text-white">{lang === "bn" ? "লিংক" : "Links"}</p>
           <ul className="space-y-2 text-sm">
             {[...ABOUT, ...NAV].map((l) => (
-              <li key={l.href}><Link href={l.href} className="hover:text-white">{l.label[lang]}</Link></li>
+              <li key={l.href}>
+                <Link href={l.href} className="hover:text-white">{l.label[lang]}</Link>
+              </li>
             ))}
           </ul>
         </div>
         <div>
           <p className="mb-3 font-semibold text-white">{lang === "bn" ? "যোগাযোগ" : "Contact"}</p>
           <ul className="space-y-2 text-sm">
-            {s?.address && <li>{s.address}</li>}
-            {s?.phone && <li><a href={`tel:${s.phone}`}>{s.phone}</a></li>}
-            {s?.email && <li><a href={`mailto:${s.email}`}>{s.email}</a></li>}
-            {s?.facebook && <li><a href={s.facebook} target="_blank" rel="noopener noreferrer">Facebook</a></li>}
+            {address && <li>{address}</li>}
+            {phone && <li><a href={`tel:${phone}`}>{phone}</a></li>}
+            {email && <li><a href={`mailto:${email}`}>{email}</a></li>}
+            {facebook && (
+              <li><a href={facebook} target="_blank" rel="noopener noreferrer">Facebook</a></li>
+            )}
           </ul>
         </div>
       </div>
