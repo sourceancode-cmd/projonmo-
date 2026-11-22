@@ -10,21 +10,21 @@ export default function AboutPage() {
   if (loading) return <div className="p-10 text-center">লোড হচ্ছে...</div>;
 
   return (
-    <PageShell title={lang === "bn" ? "আমাদের পরিচিতি" : "About Us"} subtitle={s?.tagline || ""}>
+    <PageShell title={lang === "bn" ? "আমাদের পরিচিতি" : "About Us"} subtitle={lang === "bn" ? s?.taglineBn : s?.taglineEn}>
       <div className="whitespace-pre-line leading-8 text-gray-800">
-        {s?.about || s?.description || ""}
+        {lang === "bn" ? s?.aboutBn : s?.aboutEn}
       </div>
       <div className="mt-10 grid gap-6 md:grid-cols-2">
-        {s?.mission && (
+        {(lang === "bn" ? s?.missionBn : s?.missionEn) && (
           <div className="rounded-xl border p-6">
             <h2 className="text-xl font-bold text-emerald-800">{lang === "bn" ? "আমাদের মিশন" : "Our Mission"}</h2>
-            <p className="mt-2 leading-8 text-gray-700">{s.mission}</p>
+            <p className="mt-2 leading-8 text-gray-700">{lang === "bn" ? s?.missionBn : s?.missionEn}</p>
           </div>
         )}
-        {s?.vision && (
+        {(lang === "bn" ? s?.visionBn : s?.visionEn) && (
           <div className="rounded-xl border p-6">
             <h2 className="text-xl font-bold text-emerald-800">{lang === "bn" ? "আমাদের ভিশন" : "Our Vision"}</h2>
-            <p className="mt-2 leading-8 text-gray-700">{s.vision}</p>
+            <p className="mt-2 leading-8 text-gray-700">{lang === "bn" ? s?.visionBn : s?.visionEn}</p>
           </div>
         )}
       </div>
