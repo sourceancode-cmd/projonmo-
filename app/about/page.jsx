@@ -12,6 +12,7 @@ export default function AboutPage() {
   return (
     <PageShell title={lang === "bn" ? "আমাদের পরিচিতি" : "About Us"} subtitle={lang === "bn" ? s?.taglineBn : s?.taglineEn}>
       <div className="whitespace-pre-line leading-8 text-gray-800">
+        {/* এখানে aboutBn বা aboutEn থেকে ডেটা আসবে */}
         {lang === "bn" ? s?.aboutBn : s?.aboutEn}
       </div>
       <div className="mt-10 grid gap-6 md:grid-cols-2">
