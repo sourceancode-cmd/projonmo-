@@ -68,7 +68,7 @@ export default function Header() {
           className="flex cursor-pointer items-center gap-2 text-xl font-bold text-emerald-800"
         >
           <img 
-            src="https://pub-d943faf66c4d438c867600d375c5676e.r2.dev/projonmo%20image/01_logo_500x500_HQ.webp" 
+            src="https://pub-d943faf66c4d438c867600d375c5676e.r2.dev/projonmo%20image/01_logo_projonmo_500x500.png" 
             alt="Projonmo Logo" 
             className="h-10 w-auto" 
           />
